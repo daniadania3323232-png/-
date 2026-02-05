@@ -1,0 +1,264 @@
+:root {
+  --bg: #09090f;
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-solid: #131325;
+  --text: #f4f7ff;
+  --muted: #b7bfd6;
+  --accent: #7c5cff;
+  --accent-soft: #9f88ff;
+  --danger: #ff5f85;
+  --win: #18d2a6;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+body.light {
+  --bg: #f5f7ff;
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-solid: #ffffff;
+  --text: #11132b;
+  --muted: #4f5773;
+  --accent: #5e54ff;
+  --accent-soft: #7a72ff;
+  --danger: #db2b68;
+  --win: #0ca889;
+  --shadow: 0 16px 42px rgba(89, 98, 137, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 20%, #2f1f7d 0%, transparent 40%),
+    radial-gradient(circle at 80% 0%, #073a4f 0%, transparent 35%), var(--bg);
+  min-height: 100vh;
+}
+
+body.light {
+  background: radial-gradient(circle at 15% 20%, #ebe6ff 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, #d7f3ff 0%, transparent 35%), var(--bg);
+}
+
+.app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.glass {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.panel,
+.app__header {
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.app__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.control-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+label {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+select,
+.btn {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-solid);
+}
+
+.btn {
+  cursor: pointer;
+  transition: 0.15s transform ease, 0.15s background ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+}
+
+.btn--subtle {
+  background: transparent;
+}
+
+.btn--danger {
+  border-color: rgba(255, 95, 133, 0.5);
+  color: #ffd5e3;
+  background: rgba(255, 95, 133, 0.12);
+}
+
+body.light .btn--danger {
+  color: #ba1450;
+}
+
+.status-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.status {
+  font-weight: 700;
+  font-size: 1.08rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.board-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.board {
+  width: min(92vw, 480px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.cell {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  font-size: clamp(2rem, 8vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  user-select: none;
+  cursor: pointer;
+  transition: 0.12s transform ease, 0.12s background ease;
+}
+
+.cell:hover {
+  transform: scale(1.02);
+  background: rgba(124, 92, 255, 0.16);
+}
+
+.cell.filled {
+  cursor: default;
+}
+
+.cell.win {
+  background: rgba(24, 210, 166, 0.2);
+  border-color: rgba(24, 210, 166, 0.7);
+  box-shadow: inset 0 0 0 2px rgba(24, 210, 166, 0.45);
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.score-card {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.score-card h2 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.score-card p {
+  font-size: 1.65rem;
+  font-weight: 800;
+}
+
+.history-panel h2 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.history {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  display: grid;
+  gap: 0.25rem;
+  max-height: 180px;
+  overflow: auto;
+}
+
+@media (max-width: 630px) {
+  .status-panel {
+    align-items: flex-start;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions .btn {
+    flex: 1;
+  }
+}

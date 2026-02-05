@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Крестики-нолики — Ultimate Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header glass">
+        <div>
+          <p class="eyebrow">✨ Ultimate Edition</p>
+          <h1>Крестики-нолики</h1>
+          <p class="subtitle">Играй вдвоем или попробуй обыграть ИИ.</p>
+        </div>
+        <button id="theme-toggle" class="btn btn--icon" aria-label="Сменить тему">🌙</button>
+      </header>
+
+      <section class="panel glass controls">
+        <div class="control-group">
+          <label for="mode">Режим</label>
+          <select id="mode">
+            <option value="ai">Против ИИ</option>
+            <option value="pvp">Два игрока</option>
+          </select>
+        </div>
+
+        <div class="control-group" id="difficulty-wrapper">
+          <label for="difficulty">Сложность</label>
+          <select id="difficulty">
+            <option value="easy">Легкая</option>
+            <option value="medium">Средняя</option>
+            <option value="hard">Сложная</option>
+            <option value="impossible" selected>Невозможная</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="starter">Первый ход</label>
+          <select id="starter">
+            <option value="human">Игрок (X)</option>
+            <option value="ai">ИИ (O)</option>
+            <option value="alternate">По очереди</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel glass status-panel">
+        <p id="status" class="status" role="status" aria-live="polite">Ход игрока X</p>
+        <div class="actions">
+          <button id="new-game" class="btn">Новая игра</button>
+          <button id="undo" class="btn btn--subtle">Отменить ход</button>
+          <button id="reset-score" class="btn btn--danger">Сбросить счет</button>
+        </div>
+      </section>
+
+      <section class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Игровое поле 3 на 3"></div>
+      </section>
+
+      <section class="panel glass score-grid" aria-label="Счет игры">
+        <article class="score-card">
+          <h2>X</h2>
+          <p id="score-x">0</p>
+        </article>
+        <article class="score-card">
+          <h2>Ничьи</h2>
+          <p id="score-draw">0</p>
+        </article>
+        <article class="score-card">
+          <h2>O</h2>
+          <p id="score-o">0</p>
+        </article>
+      </section>
+
+      <section class="panel glass history-panel">
+        <h2>История ходов</h2>
+        <ol id="history" class="history"></ol>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
