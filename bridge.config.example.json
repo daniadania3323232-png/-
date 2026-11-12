@@ -1,0 +1,33 @@
+{
+  "host": "127.0.0.1",
+  "port": 8787,
+  "path": "/mcp",
+  "auth": {
+    "token": "${MCP_BRIDGE_TOKEN}"
+  },
+  "filesystem": {
+    "roots": ["C:\\Users\\YourName\\Documents\\RobloxProjects"],
+    "allowWrite": false,
+    "maxFileBytes": 2000000,
+    "ignore": ["node_modules", ".git", "dist", ".cache"]
+  },
+  "web": {
+    "enabled": true,
+    "allowPrivateNetwork": false
+  },
+  "shell": {
+    "enabled": false,
+    "timeoutMs": 60000
+  },
+  "servers": {
+    "roblox": {
+      "preset": "roblox-studio"
+    },
+    "github": {
+      "enabled": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" }
+    }
+  }
+}
