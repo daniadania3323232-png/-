@@ -1082,7 +1082,9 @@ const WaterShader = {
       for (int n = 0; n < 4; n++) {
         float tt = t * (1.0 - (3.5 / float(n + 1)));
         i = p + vec2(cos(tt - i.x) + sin(tt + i.y), sin(tt - i.y) + cos(tt + i.x));
-        c += 1.0 / length(vec2(p.x / (sin(i.x + tt) / inten), p.y / (cos(i.y + tt) / inten)));
+        vec2 sc = vec2(sin(i.x + tt), cos(i.y + tt)) / inten;
+        sc = mix(vec2(1e-3), sc, step(1e-3, abs(sc)));
+        c += 1.0 / max(length(p / sc), 1e-4);
       }
       c /= 4.0; c = 1.17 - pow(c, 1.4);
       return clamp(pow(abs(c), 8.0), 0.0, 1.0);
@@ -1127,7 +1129,7 @@ function buildEnvMap() {
       void main(){
         float h = vD.y;
         vec3 top = vec3(0.10, 0.07, 0.20), hor = vec3(0.95, 0.48, 0.58), bot = vec3(0.05, 0.035, 0.06);
-        vec3 c = h > 0.0 ? mix(hor, top, pow(h, 0.6)) : mix(hor * 0.45, bot, pow(-h, 0.5));
+        vec3 c = h > 0.0 ? mix(hor, top, pow(max(h, 0.0), 0.6)) : mix(hor * 0.45, bot, pow(max(-h, 0.0), 0.5));
         c += vec3(1.2, 0.85, 0.95) * pow(max(dot(vD, uMoon), 0.0), 24.0) * 2.0;
         gl_FragColor = vec4(c, 1.0);
       }`,
@@ -1167,7 +1169,7 @@ function buildSky() {
       ${GLSL_NOISE}
       void main(){
         vec3 d = normalize(vDir);
-        float h = d.y, az = atan(d.z, d.x);
+        float h = d.y, az = length(d.xz) > 1e-6 ? atan(d.z, d.x) : 0.0;
         vec3 col = mix(uHorizon, uMid, smoothstep(0.02, 0.28, h));
         col = mix(col, uZenith, smoothstep(0.22, 0.85, h));
         float md = max(dot(d, uMoonDir), 0.0);
@@ -1179,17 +1181,17 @@ function buildSky() {
         }
         vec3 sd = d * 220.0; vec3 cell = floor(sd);
         float hs = hash12(cell.xy + cell.z * 17.17);
-        float star = step(0.9965, hs) * smoothstep(0.45, 0.0, length(fract(sd) - 0.5)) * smoothstep(0.15, 0.6, h);
+        float star = step(0.9965, hs) * (1.0 - smoothstep(0.0, 0.45, length(fract(sd) - 0.5))) * smoothstep(0.15, 0.6, h);
         col += vec3(1.0, 0.9, 0.95) * star * (0.9 + 0.6 * sin(uTime * 2.0 + hs * 80.0));
         float disk = smoothstep(0.99955, 0.9997, dot(d, uMoonDir));
         col += vec3(1.0, 0.75, 0.82) * (pow(md, 420.0) * 0.3 + pow(md, 60.0) * 0.1);
         col = mix(col, vec3(3.4, 3.0, 2.9) * (0.92 + 0.08 * vnoise(d.xy * 900.0)), disk);
         float r1 = 0.05 + 0.03 * sin(az * 3.0 + 1.3) + 0.018 * sin(az * 7.0 + 0.4) + 0.008 * sin(az * 19.0 + 2.1) + 0.004 * sin(az * 41.0);
         float r2 = 0.024 + 0.02 * sin(az * 4.0 + 2.5) + 0.011 * sin(az * 11.0 + 1.1) + 0.005 * sin(az * 29.0 + 0.7);
-        col = mix(col, mix(uFog, uMid, 0.3) * 0.95, smoothstep(r1 + 0.003, r1 - 0.003, h) * 0.8);
-        col = mix(col, uFog * 0.78, smoothstep(r2 + 0.003, r2 - 0.003, h) * 0.92);
+        col = mix(col, mix(uFog, uMid, 0.3) * 0.95, (1.0 - smoothstep(r1 - 0.003, r1 + 0.003, h)) * 0.8);
+        col = mix(col, uFog * 0.78, (1.0 - smoothstep(r2 - 0.003, r2 + 0.003, h)) * 0.92);
         col = mix(col, uFog, exp(-max(h, 0.0) * 30.0) * 0.55);
-        col = mix(col, uFog, smoothstep(0.0, -0.06, h));
+        col = mix(col, uFog, (1.0 - smoothstep(-0.06, 0.0, h)));
         gl_FragColor = vec4(col, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -1224,7 +1226,8 @@ function makeSkinMaterial(tx) {
       .replace('#include <emissivemap_fragment>', /* glsl */`#include <emissivemap_fragment>
         {
           float sweepPos = fract(uTime * 0.085) * 1.8 - 0.4;
-          float sw = exp(-pow((vMapUv.x - sweepPos + (vMapUv.y - 0.5) * 0.06) * 22.0, 2.0));
+          float sk = (vMapUv.x - sweepPos + (vMapUv.y - 0.5) * 0.06) * 22.0;
+          float sw = exp(-sk * sk);
           float fres = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0);
           totalEmissiveRadiance += uSweepColor * sw * 0.55 + uRimColor * fres * 0.18;
         }`);
@@ -1637,7 +1640,7 @@ function buildSparkles(count = 420) {
         float ang = uTime * aSpeed * 0.18 + aPhase * 6.2831853;
         float h = mod(position.y + uTime * aSpeed * 0.12, 3.8);
         vec3 p = vec3(cos(ang) * position.x, 0.5 + h, sin(ang) * position.x);
-        vFade = smoothstep(0.0, 0.5, h) * smoothstep(3.8, 2.8, h);
+        vFade = smoothstep(0.0, 0.5, h) * (1.0 - smoothstep(2.8, 3.8, h));
         vTw = 0.45 + 0.55 * sin(uTime * 3.0 * aSpeed + aPhase * 40.0);
         vMix = aMix;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
@@ -1649,8 +1652,8 @@ function buildSparkles(count = 420) {
       void main(){
         vec2 c = gl_PointCoord - 0.5;
         float d = length(c);
-        float core = pow(smoothstep(0.5, 0.0, d), 2.5);
-        float cross = (max(0.0, 1.0 - abs(c.x) * 14.0) + max(0.0, 1.0 - abs(c.y) * 14.0)) * smoothstep(0.5, 0.0, d) * 0.5;
+        float core = pow((1.0 - smoothstep(0.0, 0.5, d)), 2.5);
+        float cross = (max(0.0, 1.0 - abs(c.x) * 14.0) + max(0.0, 1.0 - abs(c.y) * 14.0)) * (1.0 - smoothstep(0.0, 0.5, d)) * 0.5;
         vec3 col = mix(vec3(1.0, 0.45, 0.72), vec3(1.0, 0.82, 0.45), vMix) * 3.2;
         gl_FragColor = vec4(col * (core + cross) * vTw * vFade, 1.0);
       }`,
@@ -1733,6 +1736,21 @@ function buildLights() {
 /* =====================================================================
    Post-processing: bloom → output → chromatic fringe + grain → vignette
    ===================================================================== */
+const SanitizeShader = {
+  name: 'HDRSanitize',
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse; varying vec2 vUv;
+    // A single NaN/Inf pixel (driver-specific math edge cases) would otherwise be blurred by bloom
+    // into a screen-sized black hole after tone mapping. Bit test: isnan() can be optimised away.
+    float clean(float x) { return (floatBitsToUint(x) & 0x7f800000u) == 0x7f800000u ? 0.0 : clamp(x, 0.0, 64.0); }
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      gl_FragColor = vec4(clean(c.r), clean(c.g), clean(c.b), 1.0);
+    }`,
+};
+
 const FinishShader = {
   uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uAmount: { value: 0.0035 }, uGrain: { value: 0.03 }, uResolution: { value: new THREE.Vector2(1, 1) } },
   vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -1836,6 +1854,7 @@ async function init() {
   composer = new EffectComposer(renderer, rt);
   composer.setPixelRatio(Q.pr);
   composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new ShaderPass(SanitizeShader));
   bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.5, 1.0);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
@@ -1966,7 +1985,7 @@ function update(t, dt) {
 }
 
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; elapsed += dt;
+  const dt = clamp((now - last) / 1000, 0, 0.05); last = now; elapsed += dt;
   update(elapsed, dt);
   composer.render(dt);
 }
